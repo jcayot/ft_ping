@@ -8,7 +8,9 @@ SRCS_DIR            := srcs
 SRCS                := $(SRCS_DIR)/ft_ping.c \
 						$(SRCS_DIR)/parse_args.c \
 						$(SRCS_DIR)/help_ft_ping.c \
-						$(SRCS_DIR)/ping_addr.c
+						$(SRCS_DIR)/ping_addr.c \
+						$(SRCS_DIR)/ping_error.c \
+						$(SRCS_DIR)/strict_atoi.c
 
 BUILD_PATH          := build
 OBJS                := $(patsubst %.c,$(BUILD_PATH)/%.o,$(SRCS))

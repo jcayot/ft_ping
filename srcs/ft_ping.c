@@ -10,18 +10,19 @@ int ft_ping(int argc, char* argv[])
 	struct addrinfo		*dest_addr_infos;
 	int					result;
 
-	if (parse_args(argc, argv, &command) != 0)
-		return (EXIT_FAILURE);
+	result = parse_args(argc, argv, &command);
+	if (result != 0)
+		return (p_parsing_error(result));
 	if (command.help)
 		return (help_ft_ping());
-	result = getaddrinfo(command.destination, NULL, NULL, &dest_addr_infos);
+	result = getaddrinfo(command.destination, NULL, &hints, &dest_addr_infos);
 	if (result == 0)
 	{
 		result = ping_addr(dest_addr_infos, command.verbose);
 		freeaddrinfo(dest_addr_infos);
 	}
 	else
-		perror(gai_strerror(result));
+		ping_error(gai_strerror(result));
 	return (result);
 }
 
