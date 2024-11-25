@@ -9,6 +9,7 @@
 # include <stdbool.h>
 # include <sys/types.h>
 # include <sys/socket.h>
+# include <sys/time.h>
 # include <netdb.h>
 # include <unistd.h>
 # include <stdlib.h>
@@ -25,7 +26,7 @@ typedef struct s_parsed_command {
 	int		count;
 	int		size;
 	int		preload;
-}	t_parsed_command;
+}	t_parsed_cmd;
 
 typedef enum parsing_result {
 	OK = 0,
@@ -36,15 +37,16 @@ typedef enum parsing_result {
 
 static const struct addrinfo hints = {0, 0, 0, IPPROTO_ICMP, 0, NULL, NULL, NULL};
 
-void	ping_error(const char* msg);
+void	ping_error(const char *msg);
 
 int		help_ft_ping(void);
 
-int		parse_args(int argc, char* argv[], t_parsed_command* dest);
+int		parse_args(int argc, char *argv[], t_parsed_cmd *dest);
 int		p_parsing_error(int err);
 
-int		ping_addr(struct addrinfo* addrinfo, bool verbose);
+int		ping_addr(struct addrinfo *addrinfo, const t_parsed_cmd* command);
 
 int		strict_atoi(const char *str);
+u_long	get_mst(void);
 
 #endif

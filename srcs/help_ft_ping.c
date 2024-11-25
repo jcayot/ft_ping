@@ -4,7 +4,7 @@
 
 #include <ft_ping.h>
 
-int		help_ft_ping(void)
+int	help_ft_ping(void)
 {
 	const char help[423] = "Usage\nping [options] <destination>\n\nOptions:\n"
 						"\t<destination>      dns name or ip address\n"
