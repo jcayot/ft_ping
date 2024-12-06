@@ -1,10 +1,11 @@
 //
 // Created by jules on 19/11/2024.
+// Made by Saku on today
 //
 
 #include <ft_ping.h>
 
-int ft_ping(int argc, char *argv[])
+int ft_ping(int argc, const char *argv[])
 {
 	t_parsed_cmd	cmd;
 	struct addrinfo	*dest_addr_infos;
@@ -26,7 +27,7 @@ int ft_ping(int argc, char *argv[])
 	return (result);
 }
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
 	return (ft_ping(argc, argv));
 }

@@ -16,8 +16,13 @@
 # include <stdio.h>
 # include <string.h>
 # include <limits.h>
+# include <netinet/ip_icmp.h>
+# include <netinet/ip.h>
 
-typedef struct s_parsed_command {
+typedef unsigned long long	u_long_long;
+
+typedef struct s_parsed_command
+{
 	char	*destination;
 	bool	audible;
 	bool	verbose;
@@ -28,25 +33,68 @@ typedef struct s_parsed_command {
 	int		preload;
 }	t_parsed_cmd;
 
-typedef enum parsing_result {
-	OK = 0,
+typedef struct s_ping_result
+{
+	int			status;
+	u_int		size;
+	u_int		seq;
+	u_int		ttl;
+	u_long_long	time;
+}	t_ping_result;
+
+typedef struct s_ping_stats
+{
+	u_long_long	start_time;
+	u_long_long	end_time;
+	u_int		sent;
+	u_int		received;
+	u_long_long	min;
+	u_long_long	avg;
+	u_long_long	max;
+	u_long_long	mdev;
+	int			result;
+}	t_ping_stats;
+
+typedef enum parsing_result
+{
+	PARSING_OK = 0,
 	UNKNOWN_PARAMETER = 1,
 	NO_ARGUMENT = 2,
 	INVALID_ARGUMENT = 3,
 }	t_parsing_result;
 
-static const struct addrinfo hints = {0, 0, 0, IPPROTO_ICMP, 0, NULL, NULL, NULL};
+typedef enum ping_status
+{
+	STATUS_OK = 0,
+	STATUS_TIMEOUT = 1,
+	STATUS_NETWORK_ERROR = 2,
+	STATUS_INVALID_ANSWER = 3,
+	STATUS_PROGRAM_ERROR = 4
+} t_ping_status;
 
-void	ping_error(const char *msg);
+static const struct addrinfo hints = {0, AF_INET, SOCK_RAW, IPPROTO_ICMP, 0, NULL, NULL, NULL};
 
-int		help_ft_ping(void);
+int			ping_error(const char* msg);
 
-int		parse_args(int argc, char *argv[], t_parsed_cmd *dest);
-int		p_parsing_error(int err);
+int			help_ft_ping(void);
 
-int		ping_addr(struct addrinfo *addrinfo, const t_parsed_cmd* command);
+int			parse_args(int argc, const char *argv[], t_parsed_cmd *dest);
+int			p_parsing_error(int err);
 
-int		strict_atoi(const char *str);
-u_long	get_mst(void);
+int			ping_addr(const struct addrinfo *addrinfo, const t_parsed_cmd* command);
+
+void		print_start(const char* dest, const char* ip, int size);
+void		print_result(const t_ping_result *result);
+void		update_stats(const t_ping_result *result,t_ping_stats *stats);
+void		print_stats(const char* dest, const t_ping_stats *stats);
+
+void		play_alert_sound(void);
+
+void		*make_icmp_packet(int size, u_int16_t sequence);
+bool		check_icmp_packet_checksum(ssize_t len, struct icmphdr	*packet);
+
+u_int16_t	calculate_checksum(const void* data, size_t len);
+int			strict_atoi(const char *str);
+u_long_long	get_ust(void);
 
 #endif

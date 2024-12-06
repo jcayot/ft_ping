@@ -17,6 +17,6 @@ int	help_ft_ping(void)
 		"\t-v                 verbose output\n"
 		"\n";
 
-	write(STDOUT_FILENO, help, 423);
+	printf("%s", help);
 	return (0);
 }

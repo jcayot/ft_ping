@@ -4,7 +4,7 @@
 
 #include <ft_ping.h>
 
-int	get_num_param(char **str, int *i, int j, int *dest)
+int	get_num_param(const char **str, int *i, int j, int *dest)
 {
 	if (str[*i][j + 1] == 0)
 	{
@@ -17,10 +17,10 @@ int	get_num_param(char **str, int *i, int j, int *dest)
 		*dest = strict_atoi(&str[*i][j + 1]);
 	if (*dest < 1)
 		return (INVALID_ARGUMENT);
-	return (OK);
+	return (PARSING_OK);
 }
 
-int	get_params(char **arg, int *i, t_parsed_cmd *dest)
+int	get_params(const char **arg, int *i, t_parsed_cmd *dest)
 {
 	int	j;
 
@@ -45,14 +45,14 @@ int	get_params(char **arg, int *i, t_parsed_cmd *dest)
 			return (UNKNOWN_PARAMETER);
 		j++;
 	}
-	return (OK);
+	return (PARSING_OK);
 }
 
-int	parse_args(int argc, char *argv[], t_parsed_cmd *dest)
+int	parse_args(int argc, const char *argv[], t_parsed_cmd *dest)
 {
 	int	i;
 
-	*dest = (t_parsed_cmd) {NULL,false,false, false, false, 0, 0, 0};
+	*dest = (t_parsed_cmd) {NULL,false,false, false, false, 0, 56, 0};
 	if (argc < 2)
 		return (NO_ARGUMENT);
 	i = 1;
@@ -60,16 +60,16 @@ int	parse_args(int argc, char *argv[], t_parsed_cmd *dest)
 	{
 		if (argv[i][0] == '-' && strlen(argv[i]) > 1)
 		{
-			if (get_params(argv, &i, dest) != OK)
+			if (get_params(argv, &i, dest) != PARSING_OK)
 				return (UNKNOWN_PARAMETER);
 		}
 		else
-			dest->destination = argv[i];
+			dest->destination = (char *) argv[i];
 		i++;
 	}
 	if (!dest->destination && !dest->help)
 		return (NO_ARGUMENT);
-	return (OK);
+	return (PARSING_OK);
 }
 
 int p_parsing_error(const int err)

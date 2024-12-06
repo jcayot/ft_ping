@@ -4,10 +4,10 @@
 
 #include <ft_ping.h>
 
-u_long	get_mst(void)
+u_long_long	get_ust(void)
 {
 	struct timeval	time;
 
 	gettimeofday(&time, NULL);
-	return (time.tv_sec * 1000 + time.tv_usec / 1000);
+	return (time.tv_sec * 1000000 + time.tv_usec);
 }
