@@ -82,6 +82,8 @@ int		ping_addr(const struct addrinfo *addrinfo, const t_parsed_cmd *cmd)
 		if (ping_result.status == STATUS_PROGRAM_ERROR)
 			break ;
 		print_result(&ping_result);
+		if (sequence == UINT16_MAX)
+			break ;
 		sequence++;
 		usleep(1000000);
 	}
