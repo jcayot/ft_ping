@@ -2,7 +2,7 @@
 // Created by jules on 20/11/2024.
 //
 
-#include <ft_ping.h>
+# include <strict_atoi.h>
 
 int	strict_atoi(const char *str)
 {

@@ -2,9 +2,10 @@
 // Created by jules on 25/11/2024.
 //
 
-#include <ft_ping.h>
+#include <get_mst.h>
 
-u_long_long	get_ust(void)
+
+unsigned long long	get_ust(void)
 {
 	struct timeval	time;
 
