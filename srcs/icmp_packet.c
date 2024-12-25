@@ -22,13 +22,15 @@ void	*make_icmp_packet(int size, u_int16_t sequence)
 	return (packet);
 }
 
-bool check_icmp_packet_checksum(ssize_t len, struct icmphdr	*packet)
+bool check_received_icmp_packet(size_t len, void* received)
 {
-	return (true);
-	uint16_t		excepted_checkum = packet->checksum;
+	if (len < sizeof(struct iphdr) + sizeof(struct icmphdr))
+		return (false);
+	struct icmphdr	*icmphdr = received + sizeof(struct iphdr);
+	uint16_t		excepted_checkum = icmphdr -> checksum;
 
-	packet->checksum = 0;
-	if (calculate_checksum(packet, len) == excepted_checkum)
+	icmphdr->checksum = 0;
+	if (calculate_checksum(received, len) == excepted_checkum)
 		return (true);
 	return (false);
 }

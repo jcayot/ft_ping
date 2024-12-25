@@ -6,5 +6,5 @@
 
 void		play_alert_sound(void)
 {
-	system("aplay ");
+
 }

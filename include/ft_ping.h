@@ -18,12 +18,16 @@
 # include <netinet/ip.h>
 # include <pthread.h>
 # include <arpa/inet.h>
+# include <errno.h>
+# include <signal.h>
 
-# include <get_mst.h>
 # include <calculate_checksum.h>
 # include <strict_atoi.h>
+# include <close_pipe.h>
 
-typedef unsigned long long	u_long_long;
+# ifndef MAX_SENDER_ADDR_LEN
+#  define MAX_SENDER_ADDR_LEN	128
+# endif
 
 typedef struct s_parsed_command
 {
@@ -43,22 +47,23 @@ typedef struct s_ping_result
 	u_int			size;
 	u_int			seq;
 	u_int			ttl;
-	u_long_long		time;
+	u_int			id;
+	u_long			time;
 	struct sockaddr	sender_addr;
 	socklen_t		sender_addr_len;
 }	t_ping_result;
 
 typedef struct s_ping_stats
 {
-	u_long_long	start_time;
-	u_long_long	end_time;
-	u_int		sent;
-	u_int		received;
-	u_long_long	min;
-	u_long_long	avg;
-	u_long_long	max;
-	u_long_long	mdev;
-	int			result;
+	struct timespec	start_time;
+	struct timespec	end_time;
+	u_int			sent;
+	u_int			received;
+	u_long			min;
+	u_long			avg;
+	u_long			max;
+	u_long			mdev;
+	int				result;
 }	t_ping_stats;
 
 typedef enum parsing_result
@@ -75,12 +80,13 @@ typedef enum ping_status
 	STATUS_TIMEOUT = 1,
 	STATUS_NETWORK_ERROR = 2,
 	STATUS_INVALID_ANSWER = 3,
-	STATUS_PROGRAM_ERROR = 4
+	STATUS_NO_ANSWER = 4,
+	STATUS_PROGRAM_ERROR = 5
 } t_ping_status;
 
 static const struct addrinfo hints = {0, AF_INET, SOCK_RAW, IPPROTO_ICMP, 0, NULL, NULL, NULL};
 
-extern pthread_t	thread;
+extern bool	running;
 
 int			ping_error(const char* msg);
 
@@ -90,19 +96,20 @@ int			parse_args(int argc, const char *argv[], t_parsed_cmd *dest);
 int			p_parsing_error(int err);
 
 int			do_ping(int sfd, const struct addrinfo *addrinfo, const t_parsed_cmd *cmd, t_ping_stats *stats);
-int			do_ping_proload(int sfd, const struct addrinfo *addrinfo, const t_parsed_cmd *cmd, t_ping_stats *stats);
+int			do_ping_preload(int sfd, const struct addrinfo *addrinfo, const t_parsed_cmd *cmd, t_ping_stats *stats);
 
 void		print_start(const char* dest, const char* ip, int size);
-void		print_result(const t_ping_result *result);
+void		print_result(const t_ping_result *result, bool quiet, bool verbose);
 void		update_stats(const t_ping_result *result,t_ping_stats *stats);
 void		print_stats(const char* dest, const t_ping_stats *stats);
 
 void		play_alert_sound(void);
 
 void		*make_icmp_packet(int size, u_int16_t sequence);
-bool		check_icmp_packet_checksum(ssize_t len, struct icmphdr	*packet);
+bool		check_received_icmp_packet(size_t len, void* received);
 
 void		ip_from_addrinfo(const struct sockaddr *sa, int family, char *dest, int dest_size);
+void		hostname_from_addrinfo(const struct sockaddr *sa, socklen_t sa_len, char *dest, int dest_size);
 
 void		handle_sigint(int sig);
 

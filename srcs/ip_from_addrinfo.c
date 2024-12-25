@@ -22,3 +22,8 @@ void	ip_from_addrinfo(const struct sockaddr *sa, int family, char *dest, int des
 		dest[0] = '\0';
 	}
 }
+
+void	hostname_from_addrinfo(const struct sockaddr *sa, socklen_t sa_len, char *dest, int dest_size)
+{
+	getnameinfo(sa, sa_len, dest, dest_size, NULL, 0, NI_NAMEREQD);
+}

@@ -24,18 +24,26 @@ int		open_socket_fd(const struct addrinfo *addrinfo)
 
 int		ping_addr(const struct addrinfo *addrinfo, const t_parsed_cmd *cmd)
 {
-	t_ping_stats	ping_stats = (t_ping_stats) {0, 0, 0, 0, 0, 0, 0, 0, 0};
+	t_ping_stats	ping_stats = (t_ping_stats) {{0, 0}, {0, 0}, 0, 0, 0, 0, 0, 0, 0};
 	int				sfd;
 
 	sfd = open_socket_fd(addrinfo);
 	if (sfd == -1)
 		return (ping_error("Error creating socket filedescriptor"));
-	ping_stats.start_time = get_ust();
+	if (clock_gettime(CLOCK_MONOTONIC, &ping_stats.start_time) == -1)
+	{
+		close(sfd);
+		return (ping_error("Error getting time"));
+	}
 	if (cmd->preload == 0)
 		do_ping(sfd, addrinfo, cmd, &ping_stats);
 	else
-		do_ping_proload(sfd, addrinfo, cmd, &ping_stats);
-	ping_stats.end_time = get_ust();
+		do_ping_preload(sfd, addrinfo, cmd, &ping_stats);
+	if (clock_gettime(CLOCK_MONOTONIC, &ping_stats.end_time) == -1)
+	{
+		close(sfd);
+		return (ping_error("Error getting time"));
+	}
 	print_stats(cmd->destination, &ping_stats);
 	close(sfd);
 	return (ping_stats.result);

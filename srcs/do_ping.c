@@ -4,22 +4,28 @@
 
 #include <ft_ping.h>
 
+bool running = true;
+
 int	handle_response(ssize_t received_len, void* response, t_ping_result *ping_result)
 {
 	if (received_len != -1)
 	{
-		if (check_icmp_packet_checksum(received_len, response))
+		if (check_received_icmp_packet(received_len, response))
 		{
+			struct iphdr *ip_header = response;
+			struct icmphdr *icmp_header = response + sizeof(struct iphdr);
+
 			ping_result->status = STATUS_OK;
-			ping_result->seq = ((struct icmphdr*) response)->un.echo.sequence;
+			ping_result->seq = icmp_header->un.echo.sequence;
+			ping_result->id = icmp_header->un.echo.id;
 			ping_result->size = received_len;
-			ping_result->ttl = ((struct iphdr*) response)->ttl;
+			ping_result->ttl = ip_header->ttl;
 		}
 		else
 			ping_result->status = STATUS_INVALID_ANSWER;
 	}
 	else
-		ping_result->status = STATUS_NETWORK_ERROR;
+		ping_result->status = STATUS_NO_ANSWER;
 	return (ping_result->status);
 }
 
@@ -43,11 +49,19 @@ t_ping_result	receive_ping_response(int sfd, int size)
 
 	memset(&ping_result, 0, sizeof(ping_result));
 	ping_result.status = STATUS_PROGRAM_ERROR;
+	ping_result.sender_addr_len = sizeof(struct sockaddr);
 	if (!response_buf)
 		return (ping_result);
-	ping_result.sender_addr_len = sizeof(struct sockaddr);
-	ssize_t received_len = recvfrom(sfd, response_buf, size + 8, 0, &ping_result.sender_addr,
-		&ping_result.sender_addr_len);
+
+	ssize_t received_len = -1;
+	while (running && received_len == -1)
+	{
+		received_len = recvfrom(sfd, response_buf, size + 8, MSG_DONTWAIT, &ping_result.sender_addr,
+										&ping_result.sender_addr_len);
+		int	error = errno;
+		if (error != EAGAIN && error != EWOULDBLOCK)
+			break ;
+	}
 	handle_response(received_len, response_buf, &ping_result);
 	free(response_buf);
 	return (ping_result);
@@ -55,38 +69,35 @@ t_ping_result	receive_ping_response(int sfd, int size)
 
 int	do_ping(int sfd, const struct addrinfo *addrinfo, const t_parsed_cmd *cmd, t_ping_stats *stats)
 {
+	signal(SIGINT, handle_sigint);
 	uint16_t		sequence = 0;
 
-	while (cmd->count == 0 || sequence < cmd->count)
+	while (running && (cmd->count == 0 || sequence < cmd->count))
 	{
 		t_ping_result	result;
-		u_long_long		start_time = get_ust();
+		struct timespec	start_time, end_time;
+		if (clock_gettime(CLOCK_MONOTONIC, &start_time) == -1)
+			return (STATUS_PROGRAM_ERROR);
 
 		result.status = send_ping_request(sfd, addrinfo, cmd->size, sequence);
 		if (result.status != STATUS_OK)
 			return (result.status);
 		result = receive_ping_response(sfd, cmd->size);
-		result.time = get_ust() - start_time;
+
+		if (clock_gettime(CLOCK_MONOTONIC, &end_time) == -1)
+			return (STATUS_PROGRAM_ERROR);
+		result.time = (end_time.tv_sec - start_time.tv_sec) * 1e6 + (end_time.tv_nsec - start_time.tv_nsec) / 1e3;
 		update_stats(&result, stats);
-		if (result.status == STATUS_PROGRAM_ERROR)
-			return (result.status);
-		if (cmd->audible)
+
+		if (cmd->audible && result.status == STATUS_OK)
 			play_alert_sound();
-		if (!cmd->quiet)
-			print_result(&result);
-		if (sequence == UINT16_MAX)
+		print_result(&result, cmd->quiet, cmd->verbose);
+
+		if (sequence == UINT16_MAX || result.status == STATUS_PROGRAM_ERROR)
 			return (result.status);
+
 		sequence++;
 		usleep(1000000);
 	}
-	return (STATUS_OK);
-}
-
-int	do_ping_proload(int sfd, const struct addrinfo *addrinfo, const t_parsed_cmd *cmd, t_ping_stats *stats)
-{
-	(void) sfd;
-	(void) addrinfo;
-	(void) cmd;
-	(void) stats;
 	return (STATUS_OK);
 }

@@ -6,5 +6,7 @@
 
 void handle_sigint(int sig)
 {
-	(void)sig;
+	(void) sig;
+	running = false;
+	printf("\n");
 }
