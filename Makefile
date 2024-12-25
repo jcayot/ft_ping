@@ -11,12 +11,12 @@ SRCS                := $(SRCS_DIR)/ft_ping.c \
 						$(SRCS_DIR)/parse_args.c \
 						$(SRCS_DIR)/help_ft_ping.c \
 						$(SRCS_DIR)/calculate_checksum.c \
+						$(SRCS_DIR)/ping_print.c \
 						$(SRCS_DIR)/ping_stats.c \
 						$(SRCS_DIR)/ping_error.c \
 						$(SRCS_DIR)/icmp_packet.c \
 						$(SRCS_DIR)/ip_from_addrinfo.c \
 						$(SRCS_DIR)/strict_atoi.c \
-						$(SRCS_DIR)/get_mst.c \
 						$(SRCS_DIR)/close_pipe.c \
 						$(SRCS_DIR)/play_alert_sound.c \
 						$(SRCS_DIR)/signals.c

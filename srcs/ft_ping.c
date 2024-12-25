@@ -5,7 +5,7 @@
 
 #include <ft_ping.h>
 
-int		open_socket_fd(const struct addrinfo *addrinfo)
+int		open_socket_fd(const struct addrinfo *addrinfo, bool verbose)
 {
 	const struct addrinfo	*addrinfo_i;
 	int						sfd;
@@ -19,6 +19,8 @@ int		open_socket_fd(const struct addrinfo *addrinfo)
 			break ;
 		addrinfo_i = addrinfo_i->ai_next;
 	}
+	if (sfd != -1 && verbose)
+		print_socket_verbose(sfd, addrinfo_i->ai_socktype, hints.ai_family);
 	return (sfd);
 }
 
@@ -26,27 +28,34 @@ int		ping_addr(const struct addrinfo *addrinfo, const t_parsed_cmd *cmd)
 {
 	t_ping_stats	ping_stats = (t_ping_stats) {{0, 0}, {0, 0}, 0, 0, 0, 0, 0, 0, 0};
 	int				sfd;
+	int				result;
 
-	sfd = open_socket_fd(addrinfo);
+	sfd = open_socket_fd(addrinfo, cmd->verbose);
 	if (sfd == -1)
 		return (ping_error("Error creating socket filedescriptor"));
+	print_start(cmd, addrinfo);
 	if (clock_gettime(CLOCK_MONOTONIC, &ping_stats.start_time) == -1)
 	{
 		close(sfd);
 		return (ping_error("Error getting time"));
 	}
 	if (cmd->preload == 0)
-		do_ping(sfd, addrinfo, cmd, &ping_stats);
+		result = do_ping(sfd, addrinfo, cmd, &ping_stats);
 	else
-		do_ping_preload(sfd, addrinfo, cmd, &ping_stats);
-	if (clock_gettime(CLOCK_MONOTONIC, &ping_stats.end_time) == -1)
+		result = do_ping_preload(sfd, addrinfo, cmd, &ping_stats);
+	if (result != STATUS_PROGRAM_ERROR)
 	{
-		close(sfd);
-		return (ping_error("Error getting time"));
+		if (clock_gettime(CLOCK_MONOTONIC, &ping_stats.end_time) == -1)
+		{
+			close(sfd);
+			return (ping_error("Error getting time"));
+		}
+		print_stats(cmd->destination, &ping_stats);
 	}
-	print_stats(cmd->destination, &ping_stats);
+	else
+		ping_error("Internal error");
 	close(sfd);
-	return (ping_stats.result);
+	return (result);
 }
 
 int ft_ping(int argc, const char *argv[])
@@ -63,9 +72,6 @@ int ft_ping(int argc, const char *argv[])
 	result = getaddrinfo(cmd.destination, NULL, &hints, &dest_addr);
 	if (result == 0)
 	{
-		char	dest_ip[INET6_ADDRSTRLEN];
-		ip_from_addrinfo(dest_addr->ai_addr, dest_addr->ai_family, dest_ip, INET6_ADDRSTRLEN);
-		print_start(cmd.destination, dest_ip, cmd.size);
 		result = ping_addr(dest_addr, &cmd);
 		freeaddrinfo(dest_addr);
 	}

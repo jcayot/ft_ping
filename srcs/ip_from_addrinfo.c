@@ -27,3 +27,37 @@ void	hostname_from_addrinfo(const struct sockaddr *sa, socklen_t sa_len, char *d
 {
 	getnameinfo(sa, sa_len, dest, dest_size, NULL, 0, NI_NAMEREQD);
 }
+
+const char* family_to_string(const int ai_family)
+{
+	switch (ai_family) {
+		case AF_INET:
+			return ("AF_INET");
+		case AF_INET6:
+			return ("AF_INET6");
+		case AF_UNIX:
+			return ("AF_UNIX");
+		case AF_UNSPEC:
+			return ("AF_UNSPEC");
+		default:
+			return ("Unknown");
+	}
+}
+
+const char* ai_socktype_to_string(const int ai_socktype)
+{
+	switch (ai_socktype) {
+		case SOCK_STREAM:
+			return "SOCK_STREAM";
+		case SOCK_DGRAM:
+			return "SOCK_DGRAM";
+		case SOCK_RAW:
+			return "SOCK_RAW";
+		case SOCK_SEQPACKET:
+			return "SOCK_SEQPACKET";
+		case SOCK_RDM:
+			return "SOCK_RDM";
+		default:
+			return "Unknown";
+	}
+}

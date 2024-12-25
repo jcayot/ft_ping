@@ -98,9 +98,11 @@ int			p_parsing_error(int err);
 int			do_ping(int sfd, const struct addrinfo *addrinfo, const t_parsed_cmd *cmd, t_ping_stats *stats);
 int			do_ping_preload(int sfd, const struct addrinfo *addrinfo, const t_parsed_cmd *cmd, t_ping_stats *stats);
 
-void		print_start(const char* dest, const char* ip, int size);
-void		print_result(const t_ping_result *result, bool quiet, bool verbose);
 void		update_stats(const t_ping_result *result,t_ping_stats *stats);
+
+void		print_socket_verbose(int sfd, int ai_socktype, int hints_ai_family);
+void		print_start(const t_parsed_cmd* cmd, const struct addrinfo* dest_addr);
+void		print_result(const t_ping_result *result, bool quiet, bool verbose);
 void		print_stats(const char* dest, const t_ping_stats *stats);
 
 void		play_alert_sound(void);
@@ -110,6 +112,8 @@ bool		check_received_icmp_packet(size_t len, void* received);
 
 void		ip_from_addrinfo(const struct sockaddr *sa, int family, char *dest, int dest_size);
 void		hostname_from_addrinfo(const struct sockaddr *sa, socklen_t sa_len, char *dest, int dest_size);
+const char	*family_to_string(int ai_family);
+const char	*ai_socktype_to_string(int ai_socktype);
 
 void		handle_sigint(int sig);
 
